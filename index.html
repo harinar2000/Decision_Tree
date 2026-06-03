@@ -3,30 +3,189 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Decision Tree</title>
-  <meta http-equiv="refresh" content="0; url=decision-tree.html">
+  <title>When to Use What — AI Tool Decision Framework</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root {
+      --bg: #0d0e11;
+      --surface: #13151a;
+      --surface2: #1a1d25;
+      --border: #252830;
+      --text: #e8eaf0;
+      --muted: #5a5e6e;
+      --accent: #4ecdc4;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body { height: 100%; }
+
     body {
-      margin: 0;
-      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── TAB BAR ── */
+    .tabbar {
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-family: system-ui, sans-serif;
-      background: #111;
-      color: #eee;
-      text-align: center;
+      gap: 6px;
+      padding: 14px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
     }
-    a {
-      color: #6cbefb;
+
+    .brand {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-right: 18px;
+      white-space: nowrap;
+    }
+
+    .tab {
+      appearance: none;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      padding: 8px 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      line-height: 1.3;
+    }
+
+    .tab .tab-sub {
+      font-size: 9px;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      opacity: 0.7;
+      text-transform: none;
+      font-weight: 400;
+    }
+
+    .tab:hover {
+      color: var(--text);
+      border-color: var(--muted);
+    }
+
+    .tab.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: rgba(78,205,196,0.08);
+    }
+
+    .tab.active .tab-sub { color: var(--accent); opacity: 0.85; }
+
+    .spacer { flex: 1; }
+
+    .open-link {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
       text-decoration: none;
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      transition: all 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .open-link:hover { color: var(--text); border-color: var(--muted); }
+
+    /* ── FRAME ── */
+    .frame-wrap {
+      flex: 1;
+      position: relative;
+      min-height: 0;
+    }
+
+    iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: none;
+      background: var(--bg);
+    }
+
+    iframe.active { display: block; }
+
+    @media (max-width: 640px) {
+      .brand { display: none; }
+      .tabbar { padding: 12px 14px; gap: 5px; }
+      .tab { padding: 7px 12px; }
+      .open-link { display: none; }
     }
   </style>
 </head>
 <body>
-  <div>
-    <h1>Decision Tree</h1>
-    <p>Redirecting to <a href="decision-tree.html">decision-tree.html</a>...</p>
+
+  <nav class="tabbar">
+    <span class="brand">When to Use What</span>
+
+    <button class="tab active" data-target="inverted">
+      Outcome-first
+      <span class="tab-sub">start simple, escalate when forced</span>
+    </button>
+
+    <button class="tab" data-target="original">
+      Original
+      <span class="tab-sub">external-system-first</span>
+    </button>
+
+    <span class="spacer"></span>
+
+    <a class="open-link" id="openCurrent" href="decision-tree-inverted.html" target="_blank" rel="noopener">Open in new tab ↗</a>
+  </nav>
+
+  <div class="frame-wrap">
+    <iframe id="frame-inverted" class="active" src="decision-tree-inverted.html" title="Outcome-first decision tree" loading="eager"></iframe>
+    <iframe id="frame-original" src="decision-tree.html" title="Original decision tree" loading="lazy"></iframe>
   </div>
+
+  <script>
+    const tabs = document.querySelectorAll('.tab');
+    const openLink = document.getElementById('openCurrent');
+    const hrefs = {
+      inverted: 'decision-tree-inverted.html',
+      original: 'decision-tree.html'
+    };
+
+    function activate(target) {
+      tabs.forEach(t => t.classList.toggle('active', t.dataset.target === target));
+      document.querySelectorAll('iframe').forEach(f => {
+        f.classList.toggle('active', f.id === 'frame-' + target);
+      });
+      openLink.href = hrefs[target];
+      if (history.replaceState) history.replaceState(null, '', '#' + target);
+    }
+
+    tabs.forEach(tab => tab.addEventListener('click', () => activate(tab.dataset.target)));
+
+    // Honor #original / #inverted on load
+    const initial = location.hash.replace('#', '');
+    if (initial === 'original' || initial === 'inverted') activate(initial);
+  </script>
+
 </body>
 </html>
