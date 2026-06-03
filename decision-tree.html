@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>When to Use What: AI Tool Decision Framework</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+
+  :root {
+    --bg: #0d0e11;
+    --surface: #13151a;
+    --surface2: #1a1d25;
+    --border: #252830;
+    --text: #e8eaf0;
+    --muted: #5a5e6e;
+    --dim: #3a3e4e;
+
+    --prompt: #f5c842;
+    --skill: #4ecdc4;
+    --plugin: #ff6b6b;
+    --mcp: #a78bfa;
+    --subagent: #fb923c;
+
+    --prompt-bg: rgba(245,200,66,0.08);
+    --skill-bg: rgba(78,205,196,0.08);
+    --plugin-bg: rgba(255,107,107,0.08);
+    --mcp-bg: rgba(167,139,250,0.08);
+    --subagent-bg: rgba(251,146,60,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: 48px 48px 0;
+    position: relative;
+  }
+
+  .eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 7vw, 96px);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  h1 span {
+    color: var(--muted);
+  }
+
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 40px;
+    max-width: 480px;
+  }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 48px 32px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    font-weight: 500;
+    border: 1px solid;
+    cursor: default;
+    transition: all 0.2s;
+  }
+
+  .legend-item:hover { transform: translateY(-1px); }
+
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  .legend-item.prompt { color: var(--prompt); border-color: var(--prompt); background: var(--prompt-bg); }
+  .legend-item.skill  { color: var(--skill);  border-color: var(--skill);  background: var(--skill-bg); }
+  .legend-item.plugin { color: var(--plugin); border-color: var(--plugin); background: var(--plugin-bg); }
+  .legend-item.mcp    { color: var(--mcp);    border-color: var(--mcp);    background: var(--mcp-bg); }
+  .legend-item.sub    { color: var(--subagent);border-color:var(--subagent);background: var(--subagent-bg); }
+
+  .dot.prompt { background: var(--prompt); }
+  .dot.skill  { background: var(--skill); }
+  .dot.plugin { background: var(--plugin); }
+  .dot.mcp    { background: var(--mcp); }
+  .dot.sub    { background: var(--subagent); }
+
+  /* ── MAIN LAYOUT ── */
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    padding: 0 2px 2px;
+  }
+
+  /* ── DECISION TREE ── */
+  .tree-section {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    padding: 40px 48px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 28px;
+  }
+
+  /* ── DECISION FLOW ── */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .q-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    position: relative;
+  }
+
+  .q-row + .q-row {
+    margin-top: 16px;
+  }
+
+  .q-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    flex: 1;
+    position: relative;
+  }
+
+  .q-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    padding-top: 2px;
+    min-width: 20px;
+    flex-shrink: 0;
+  }
+
+  .q-text {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  .q-text strong { font-weight: 500; }
+
+  .branches {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 32px;
+    flex: 2;
+  }
+
+  .branch {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 4px;
+    border-left: 3px solid;
+    position: relative;
+  }
+
+  .branch-cond {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    min-width: 90px;
+    flex-shrink: 0;
+  }
+
+  .branch-arrow {
+    color: var(--dim);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  .branch-result {
+    font-size: 13px;
+    font-weight: 400;
+    flex: 1;
+  }
+
+  .branch-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 3px;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+
+  .b-prompt { border-color: var(--prompt); background: var(--prompt-bg); }
+  .b-prompt .branch-tag { color: var(--prompt); background: rgba(245,200,66,0.12); }
+
+  .b-skill  { border-color: var(--skill);  background: var(--skill-bg); }
+  .b-skill  .branch-tag { color: var(--skill);  background: rgba(78,205,196,0.12); }
+
+  .b-plugin { border-color: var(--plugin); background: var(--plugin-bg); }
+  .b-plugin .branch-tag { color: var(--plugin); background: rgba(255,107,107,0.12); }
+
+  .b-mcp    { border-color: var(--mcp);    background: var(--mcp-bg); }
+  .b-mcp    .branch-tag { color: var(--mcp);    background: rgba(167,139,250,0.12); }
+
+  .b-sub    { border-color: var(--subagent);background:var(--subagent-bg); }
+  .b-sub    .branch-tag { color: var(--subagent); background: rgba(251,146,60,0.12); }
+
+  .b-next   { border-color: var(--dim); background: transparent; }
+  .b-next   .branch-tag { color: var(--muted); background: var(--surface2); }
+
+  /* ── MASTER TABLE ── */
+  .table-section {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    padding: 40px 48px;
+    border-top: 2px solid var(--border);
+  }
+
+  .tool-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .tool-card {
+    padding: 20px;
+    border-radius: 6px;
+    border: 1px solid;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tool-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .tool-card.prompt { border-color: rgba(245,200,66,0.25); background: var(--prompt-bg); }
+  .tool-card.prompt::before { background: var(--prompt); }
+
+  .tool-card.skill  { border-color: rgba(78,205,196,0.25); background: var(--skill-bg); }
+  .tool-card.skill::before  { background: var(--skill); }
+
+  .tool-card.plugin { border-color: rgba(255,107,107,0.25); background: var(--plugin-bg); }
+  .tool-card.plugin::before { background: var(--plugin); }
+
+  .tool-card.mcp    { border-color: rgba(167,139,250,0.25); background: var(--mcp-bg); }
+  .tool-card.mcp::before    { background: var(--mcp); }
+
+  .tool-card.sub    { border-color: rgba(251,146,60,0.25); background: var(--subagent-bg); }
+  .tool-card.sub::before    { background: var(--subagent); }
+
+  .card-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  .prompt .card-title { color: var(--prompt); }
+  .skill  .card-title { color: var(--skill); }
+  .plugin .card-title { color: var(--plugin); }
+  .mcp    .card-title { color: var(--mcp); }
+  .sub    .card-title { color: var(--subagent); }
+
+  .card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .meta-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .meta-val {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  /* ── SURFACE TABLE ── */
+  .surface-section {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    padding: 40px 48px;
+    border-top: 1px solid var(--border);
+  }
+
+  .surface-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 24px;
+    font-size: 12px;
+  }
+
+  .surface-table th:nth-child(1) { width: 14%; }
+  .surface-table th:nth-child(2) { width: 18%; }
+  .surface-table th:nth-child(3) { width: 22%; }
+  .surface-table th:nth-child(4) { width: 46%; }
+
+  .surface-table th {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+
+  .surface-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(37,40,48,0.5);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  .surface-table tr:last-child td { border-bottom: none; }
+
+  .surface-table tr:hover td { background: var(--surface2); }
+
+  .surface-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.08em;
+    margin: 2px 2px 2px 0;
+  }
+
+  .tag.prompt { color: var(--prompt); background: var(--prompt-bg); border: 1px solid rgba(245,200,66,0.25); }
+  .tag.skill  { color: var(--skill);  background: var(--skill-bg);  border: 1px solid rgba(78,205,196,0.25); }
+  .tag.plugin { color: var(--plugin); background: var(--plugin-bg); border: 1px solid rgba(255,107,107,0.25); }
+  .tag.mcp    { color: var(--mcp);    background: var(--mcp-bg);    border: 1px solid rgba(167,139,250,0.25); }
+  .tag.sub    { color: var(--subagent);background:var(--subagent-bg);border: 1px solid rgba(251,146,60,0.25); }
+  .tag.none   { color: var(--muted);  background: transparent;      border: 1px solid var(--dim); }
+
+  .note { font-size: 11px; color: var(--muted); font-style: italic; }
+
+  /* ── TIEBREAKER ── */
+  .tie-section {
+    grid-column: 1 / -1;
+    background: var(--surface);
+    padding: 40px 48px 48px;
+    border-top: 1px solid var(--border);
+  }
+
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .rule-card {
+    padding: 18px 20px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .rule-q {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 8px;
+    line-height: 1.4;
+  }
+
+  .rule-a {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ── DIVIDER ── */
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 0;
+  }
+
+  @media (max-width: 900px) {
+    header, .legend, .tree-section, .table-section, .surface-section, .tie-section {
+      padding-left: 24px;
+      padding-right: 24px;
+    }
+    .tool-grid { grid-template-columns: 1fr 1fr; }
+    .rules-grid { grid-template-columns: 1fr; }
+    h1 { font-size: 48px; }
+    .branches { margin-left: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">AI Tooling Framework · Build AI Product Sense</div>
+  <h1>WHEN TO USE <span>WHAT</span></h1>
+  <p class="subtitle">A decision framework for prompt vs. skill vs. plugin vs. MCP vs. subagent — and where each one lives.</p>
+</header>
+
+<div class="legend">
+  <div class="legend-item prompt"><div class="dot prompt"></div>PROMPT</div>
+  <div class="legend-item skill"><div class="dot skill"></div>SKILL</div>
+  <div class="legend-item plugin"><div class="dot plugin"></div>PLUGIN</div>
+  <div class="legend-item mcp"><div class="dot mcp"></div>MCP</div>
+  <div class="legend-item sub"><div class="dot sub"></div>SUB-AGENT</div>
+</div>
+
+<main>
+
+  <!-- DECISION TREE -->
+  <div class="tree-section">
+    <div class="section-label">// Decision Tree — start at Q1</div>
+
+    <div class="flow">
+
+      <!-- Q1 -->
+      <div class="q-row">
+        <div class="q-block" style="flex: 1.2;">
+          <span class="q-num">Q1</span>
+          <div class="q-text">Does this task require <strong>reading or writing data in an external system</strong> (CRM, calendar, DB, API, file system)?</div>
+        </div>
+        <div class="branches">
+          <div class="branch b-next">
+            <span class="branch-cond">NO</span>
+            <span class="branch-arrow">→</span>
+            <span class="branch-result">Task is self-contained. Go to Q2.</span>
+            <span class="branch-tag">→ Q2</span>
+          </div>
+          <div class="branch b-next">
+            <span class="branch-cond">YES, once</span>
+            <span class="branch-arrow">→</span>
+            <span class="branch-result">Single external call — one system, one operation. Go to Q3.</span>
+            <span class="branch-tag">→ Q3</span>
+          </div>
+          <div class="branch b-sub">
+            <span class="branch-cond">YES, multi</span>
+            <span class="branch-arrow">→</span>
+            <span class="branch-result">Reads/writes across <em>multiple</em> systems or requires sequencing decisions across steps.</span>
+            <span class="branch-tag">SUB-AGENT</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div class="q-row">
+        <div class="q-block" style="flex: 1.2;">
+          <span class="q-num">Q2</span>
+          <div class="q-text">Is this task <strong>reused across teams, products, or sessions</strong> — or does it need enforced consistency?</div>
+        </div>
+        <div class="branches">
+          <div class="branch b-prompt">
+            <span class="branch-cond">NO, one-off</span>
+            <span class="branch-arrow">→</span>
+            <span class="branch-result">Bespoke instruction for this session. Write inline. No overhead justified.</span>
+            <span class="branch-tag">PROMPT</span>
+          </div>
+          <div class="branch b-skill">
+            <span class="branch-cond">YES, shared</span>
+            <span class="branch-arrow">→</span>
+            <span class="branch-result">Shared behavior that multiple agents or products will call. Package it. Version it.</span>
+            <span class="branch-tag">SKILL</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div class="q-row">
+        <div class="q-block" style="flex: 1.2;">
+          <span class="q-num">Q3</span>
+          <div class="q-text">Is the integration <strong>real-time, bidirectional, or stateful</strong> — or does it just need to call a third-party API once?</div>
+        </div>
+        <div class="branches">
+          <div class="branch b-plugin">
+            <span class="branch-cond">Simple call</span>
+            <span class="branch-arrow">→</span>
+            <span class="branch-result">Single-direction, stateless API call. Search, lookup, fetch. Scope is narrow.</span>
+            <span class="branch-tag">PLUGIN</span>
+          </div>
+          <div class="branch b-mcp">
+            <span class="branch-cond">Stateful / rich</span>
+            <span class="branch-arrow">→</span>
+            <span class="branch-result">Needs context, session state, or exposes multiple operations from one system (Jira, Salesforce, Slack).</span>
+            <span class="branch-tag">MCP</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q4 — compound check -->
+      <div class="q-row">
+        <div class="q-block" style="flex: 1.2;">
+          <span class="q-num">Q4</span>
+          <div class="q-text">Override check: Does the task require <strong>parallelism, long-horizon planning, self-correction, or spawning child tasks</strong>?</div>
+        </div>
+        <div class="branches">
+          <div class="branch b-next">
+            <span class="branch-cond">NO</span>
+            <span class="branch-arrow">→</span>
+            <span class="branch-result">Stick with what Q1–Q3 pointed to. Single-layer is fine.</span>
+            <span class="branch-tag">HOLD</span>
+          </div>
+          <div class="branch b-sub">
+            <span class="branch-cond">YES</span>
+            <span class="branch-arrow">→</span>
+            <span class="branch-result">Upgrade to Sub-agent regardless of prior answers. Complexity demands autonomous orchestration.</span>
+            <span class="branch-tag">SUB-AGENT</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TOOL CARDS -->
+  <div class="table-section">
+    <div class="section-label">// Tool Reference — what each one is, when it wins, when it loses</div>
+    <div class="tool-grid">
+
+      <div class="tool-card prompt">
+        <div class="card-title">Prompt</div>
+        <div class="card-meta">
+          <div class="meta-row">
+            <div class="meta-label">What it is</div>
+            <div class="meta-val">Natural language instruction — inline or system. Ephemeral. Scoped to one session or one call.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Use when</div>
+            <div class="meta-val">Task is bespoke, one-off, or exploratory. No reuse. No external calls. Fast iteration needed.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Don't use when</div>
+            <div class="meta-val">Same logic is repeated. Multiple agents need consistency. Behavior needs to be tested and versioned.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Effort</div>
+            <div class="meta-val">Minutes. No infrastructure.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card skill">
+        <div class="card-title">Skill</div>
+        <div class="card-meta">
+          <div class="meta-row">
+            <div class="meta-label">What it is</div>
+            <div class="meta-val">Packaged, versioned prompt-plus-context. A reusable module that agents invoke. Lives in a registry or repo.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Use when</div>
+            <div class="meta-val">Same capability is needed across multiple products, agents, or teams. Needs consistent behavior and testability.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Don't use when</div>
+            <div class="meta-val">Task is truly one-off. Overhead of packaging isn't justified. Skill library doesn't exist yet.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Effort</div>
+            <div class="meta-val">Hours to build, maintained over time. Requires SKILL.md + eval harness.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card plugin">
+        <div class="card-title">Plugin</div>
+        <div class="card-meta">
+          <div class="meta-row">
+            <div class="meta-label">What it is</div>
+            <div class="meta-val">Stateless function that calls a third-party API. Narrow scope. No memory. Request → response.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Use when</div>
+            <div class="meta-val">Single-operation external call: search, weather, lookup, price fetch. Scope won't expand.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Don't use when</div>
+            <div class="meta-val">You need session state, multiple operations on one system, or auth/context per user. Use MCP instead.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Effort</div>
+            <div class="meta-val">Low–medium. Write tool spec + schema. No server needed.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card mcp">
+        <div class="card-title">MCP</div>
+        <div class="card-meta">
+          <div class="meta-row">
+            <div class="meta-label">What it is</div>
+            <div class="meta-val">Model Context Protocol server — exposes multiple tools from one system with session context, auth, and shared state.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Use when</div>
+            <div class="meta-val">Integration needs depth: create + read + update in one system (Salesforce, Jira, Slack). Auth is per-user. State matters.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Don't use when</div>
+            <div class="meta-val">You only need one stateless API call. Plugin is cheaper and simpler. MCP overhead isn't earned.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Effort</div>
+            <div class="meta-val">Medium–high. Server infrastructure + tool definitions + auth layer.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tool-card sub">
+        <div class="card-title">Sub-agent</div>
+        <div class="card-meta">
+          <div class="meta-row">
+            <div class="meta-label">What it is</div>
+            <div class="meta-val">Autonomous agent spawned by an orchestrator. Has its own context, tools, and loop. Reports result back.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Use when</div>
+            <div class="meta-val">Task is too complex for one agent: parallelism needed, multi-system writes, long-horizon planning, self-correction loops.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Don't use when</div>
+            <div class="meta-val">Task fits in one context window. Debugging compound agents when simpler tools would work is expensive.</div>
+          </div>
+          <div class="meta-row">
+            <div class="meta-label">Effort</div>
+            <div class="meta-val">High. Orchestrator + harness + AGENTS.md + eval loops. Only justified for genuinely compound tasks.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SURFACE TABLE -->
+  <div class="surface-section">
+    <div class="section-label">// Surface Availability — what's accessible where</div>
+    <table class="surface-table">
+      <thead>
+        <tr>
+          <th>Surface</th>
+          <th>Who it's for</th>
+          <th>Available Tools</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="surface-name">Claude.ai chat</td>
+          <td class="note">Anyone with a Claude account. Browser, mobile, desktop.</td>
+          <td>
+            <span class="tag prompt">PROMPT</span>
+            <span class="tag skill">SKILL</span>
+            <span class="tag mcp">MCP</span>
+          </td>
+          <td class="note">MCP via connected apps (Jira, Figma, Slack, etc.). Plugins not natively surfaced. Sub-agents invisible to the end user — any orchestration happens server-side if at all.</td>
+        </tr>
+        <tr>
+          <td class="surface-name">Claude Cowork</td>
+          <td class="note">Non-developers. Desktop tool for file and task automation without writing code.</td>
+          <td>
+            <span class="tag prompt">PROMPT</span>
+            <span class="tag skill">SKILL</span>
+            <span class="tag mcp">MCP</span>
+            <span class="tag sub">SUB-AGENT</span>
+          </td>
+          <td class="note">Designed for repeatable desktop workflows — move files, reorganize folders, process documents, automate multi-step tasks. Claude acts as an orchestrator behind a no-code UI. Sub-agent behavior is abstracted; user sees task + outcome, not the loop. Skills can be embedded as task templates. MCP extends what Cowork can touch (calendar, Drive, etc.).</td>
+        </tr>
+        <tr>
+          <td class="surface-name">Claude Code (CLI)</td>
+          <td class="note">Developers. Terminal-first agentic coding.</td>
+          <td>
+            <span class="tag prompt">PROMPT</span>
+            <span class="tag skill">SKILL</span>
+            <span class="tag mcp">MCP</span>
+            <span class="tag sub">SUB-AGENT</span>
+          </td>
+          <td class="note">AGENTS.md drives skill + sub-agent behavior. MCP servers configured in project config. Best surface for compound agentic loops: write → test → fix → commit. Skills as internal products live here.</td>
+        </tr>
+        <tr>
+          <td class="surface-name">Claude API</td>
+          <td class="note">Builders and product teams. Full programmatic control.</td>
+          <td>
+            <span class="tag prompt">PROMPT</span>
+            <span class="tag skill">SKILL</span>
+            <span class="tag plugin">PLUGIN</span>
+            <span class="tag mcp">MCP</span>
+            <span class="tag sub">SUB-AGENT</span>
+          </td>
+          <td class="note">Full surface — every tool type is available. Plugins = tool_use definitions. Skills injected via system prompt or context injection. Sub-agents = chained API calls with separate context windows. MCP via server URL param.</td>
+        </tr>
+        <tr>
+          <td class="surface-name">Custom app (API-backed)</td>
+          <td class="note">Product teams embedding Claude in their own product.</td>
+          <td>
+            <span class="tag prompt">PROMPT</span>
+            <span class="tag skill">SKILL</span>
+            <span class="tag plugin">PLUGIN</span>
+            <span class="tag mcp">MCP</span>
+            <span class="tag sub">SUB-AGENT</span>
+          </td>
+          <td class="note">You own the full stack — surface what makes sense for your users. Skills live in your prompt library or registry. Plugins = tools you define and host. MCP = your own or partner servers. Sub-agents need your own orchestration layer.</td>
+        </tr>
+        <tr>
+          <td class="surface-name">Artifacts (in-chat)</td>
+          <td class="note">Claude.ai users wanting interactive outputs without leaving chat.</td>
+          <td>
+            <span class="tag prompt">PROMPT</span>
+            <span class="tag mcp">MCP</span>
+          </td>
+          <td class="note">Artifacts can call the Claude API directly (Claude-in-Claude). MCP accessible if user has connectors enabled. Skills can't be invoked natively but can be embedded in the system prompt of a nested API call.</td>
+        </tr>
+        <tr>
+          <td class="surface-name">Enterprise / Pfizer deployment</td>
+          <td class="note">Regulated orgs with governance requirements.</td>
+          <td>
+            <span class="tag prompt">PROMPT</span>
+            <span class="tag skill">SKILL</span>
+            <span class="tag mcp">MCP</span>
+          </td>
+          <td class="note">Plugin and sub-agent availability gated by org policy + validation tier. Regulated workflows: Claude artifacts stay in human-review mode, not autonomous execution. Prefer read-heavy MCP + confirmation patterns over write-first sub-agents.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TIEBREAKERS -->
+  <div class="tie-section">
+    <div class="section-label">// Tiebreakers — when two answers look right</div>
+    <div class="rules-grid">
+
+      <div class="rule-card">
+        <div class="rule-q">Prompt vs. Skill — both seem fine?</div>
+        <div class="rule-a">Ask: will a second team or a second product ever need this exact behavior? If yes → Skill. If no → Prompt. Don't over-engineer a one-off.</div>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-q">Plugin vs. MCP — feels like either could work?</div>
+        <div class="rule-a">Count the operations. One operation, no state → Plugin. Two or more operations, or user-scoped auth → MCP. When in doubt: start Plugin, upgrade to MCP when scope creeps.</div>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-q">MCP vs. Sub-agent — where's the line?</div>
+        <div class="rule-a">MCP gives Claude <em>tools</em>. Sub-agent gives Claude an <em>agent</em>. If you need decisions between external calls — not just execution — you need a sub-agent, not more MCP tools.</div>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-q">Skill vs. Sub-agent for repeatable tasks?</div>
+        <div class="rule-a">Skill = packaged <em>reasoning pattern</em>, no autonomy. Sub-agent = autonomous <em>executor</em> with its own tools. Use Skills inside Sub-agents for reuse without coupling architecture to behavior.</div>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-q">My use case is regulated (pharma). What changes?</div>
+        <div class="rule-a">Sub-agents and autonomous MCP writes need a human-in-the-loop gate before any system of record mutation. Prefer read-heavy MCP + human confirmation patterns. Prompts + Skills are low-risk.</div>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-q">Complexity is unclear. Where do I start?</div>
+        <div class="rule-a">Start with a Prompt. If it needs reuse → promote to Skill. If it needs external data → add Plugin or MCP. If it needs to orchestrate → graduate to Sub-agent. Never build Sub-agent-first.</div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+</body>
+</html>
